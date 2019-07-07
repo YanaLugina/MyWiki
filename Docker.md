@@ -9,6 +9,7 @@ docker image                            // отображает список о�
 docker tag ID user/dockerName:latest
 docker push user/dockerName
 docker rmi user/dockerName (dickerName or ID)
+docker run
 
 ##Создание Docker-контейнера
 1) создать директорию -> войти в нее (это контекст сборки)
