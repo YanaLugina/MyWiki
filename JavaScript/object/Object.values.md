@@ -18,6 +18,27 @@ alert( sumSalaries(salaries) ); // 650
 
 Решение:
 ```javascript
+const salaries = {
+  "John": 100,
+  "Pete": 300,
+  "Mary": 250
+};
+
+const sumSalaries = function(obj) {
+  const objToAtt = Object.values(obj);
+  let sum = 0;
+  for (let item of objToAtt) {
+    sum = sum + item;
+  }
+  return sum;
+};
+
+console.log(sumSalaries(salaries)); // 650
+```
+
+
+Другое решение:
+```javascript
 let salaries = {
   "John": 100,
   "Pete": 300,
