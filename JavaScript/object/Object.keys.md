@@ -35,26 +35,24 @@ const count = function(obj) {
   return all;
 };
 
+// можно посчитать и по другому
+
 const count2 = function(obj, isSbl) {
-  if(isSbl === 'sbl') {
-    // считаем ко-во всех символов в объекте
-    let allSymbol = Object.getOwnPropertySymbols(obj);
-    return allSymbol.length;
-  } else if (isSbl === 'props') { //считаем кол-во всех свойств объекта, но не символов
-    return Object
-    .keys(user)
-    .reduce((sum, item) => { 
-      return sum = sum + 1; 
-      }, 0); 
-  } else { //считаем все и символы и объекты
-    let ref = Reflect.ownKeys(obj);
-    return ref.reduce((sum, item) => {
-      return sum = sum + 1;
-    }, 0);
+  // проверяем является ли первый аргумент объектом
+  if(typeof obj !== 'object') {
+    return 'no object';
   }
 
-  return 'err';
-  
+  if(isSbl === 'sbl') {
+  // считаем ко-во всех символов в объекте
+  return Object.getOwnPropertySymbols(obj).length;
+  } else if (isSbl === 'props') {
+  //считаем кол-во всех свойств объекта,но не символов
+    return Object.keys(obj).length;
+  } else {
+    //считаем все и символы и объекты
+    return Reflect.ownKeys(obj).length;
+  }
 };
 
 console.log(count(user)); //3
@@ -62,4 +60,5 @@ console.log(count(user)); //3
 console.log(count2(user, 'sbl')); //1
 console.log(count2(user, 'props')); //3
 console.log(count2(user, 'all')); //4
+console.log(count2(user, 666)); //4
 ```
