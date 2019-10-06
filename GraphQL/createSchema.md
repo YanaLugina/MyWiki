@@ -65,6 +65,8 @@ type User {
 }
 ```
 
+## Сквозные типы
+
 Существуют **сквозные типы** для сохранения некоторой информации о связи. Определяем ребро, как тип, получаем еще один узел для соединения двух узлов.
 
 Пример:
@@ -99,13 +101,261 @@ type Friendship {
 }
 ```
 
+## Списки разных типов
+
+Пример: Расписание студентов состоит из разных событий (пользовательских типов данных), каждое из которых имеет общие и различные поля.
+
+### Объединения
+
+Для вызова запроса такого типа:
+```
+query schedule {
+    agenda {
+        ...on Workout {
+            name
+            resp
+        }
+        ...on StudyGroup {
+            name
+            subject
+            students
+        }
+    }
+}
+```
+необходимо составить схему таким образом:
+
+```
+union AgendaItem = StudyGroup | Workout
+
+type StudyGroup {
+    name: String!
+    subject: String
+    students: [User!]! 
+}
+
+type Workout {
+    name: String!
+    resp: Int!
+}
+
+type Query {
+    agenda: [AgendaItem!]!
+}
+
+```
+
+Для объединения разных типов пользовательских данных в одно объединение (один тип) необходимо использовать вертикальную черту ```|```
+
+### Интерфейсы
+
+Интерфейсы - абстрактные типы, которые могут быть представлены как типы. Они объединяют данные не по типам, а по набору полей определяющие тип.
+Например запрос на получение расписания (состоящее из разных типов событий), может выглядеть так:
+
+```
+query schedule {
+    agenda {
+        name
+        start
+        end
+        ...on Workout {
+            resp
+        }
+    }
+}
+```
+
+реализовать такое решение можно так:
+
+```
+scalar DateTime
+
+interface AgendaItem {
+    name: String!
+    start: DateTime!
+    end: DateTime!
+}
+
+type StudyGroup implements AgendaItem {
+    name: String!
+    start: DateTime!
+    end: DateTime!
+    participants: [User!]!
+    topic: String!
+}
+
+type Worout implements AgendaItem {
+    name: String!
+    start: DateTime!
+    end: DateTime!
+    resp: Int!
+}
+
+type Query {
+    agenda: [AgendaItem!]!
+}
+
+```
+
+### Когда использовать Объединения, а когда - Интерфейсы?
+
+Если типы данных содержат разные поля - используем объединения. 
+
+Если типы данных содержат опрределенные обязательные одинаковые поля - используем Интерфейсы.
+
+
+## Аргументы
+
+Аргументы - могут быть добавлены в любое поле, позволяют получать более точные результаты запроса и мутаций.
+
+Например, если нам нужно получить определенную фоторгафию или определенного пользователя, мы должны указать возможность такого запроса:
+
+```
+type Query {
+    ...
+    User(githubLogin: ID!): User!
+    Photo(id: ID!): Photo!
+     
+    
+}
+```
+После этого можно делать запросы для получения данных пользователя:
+
+```
+query {
+    User(githubLogin: "MoonTahoe") {
+        name
+        avatar
+    }
+}
+```
+
+для получения фотографии:
+
+```
+query {
+    Photo(id: "14TH5B6NS4KIG3H4S") {
+        name
+        description
+        url
+    }
+}
+```
+
+Если в для данных запросов не предоставлять id и githubLogin парсер GraphQL выдаст ошибку.
+
+Сортировку и фильтрацию (любые аргументы) можно применять не только к полям типа Query. 
+Например, добавление фильтра пагинации позволяет уменьшить объем данных, который возвращает запрос:
+
+```
+type User {
+    postedPhotos(
+        first: Int = 25
+        start: Int = 0
+        sort: SortDirection = DESCENDING
+        sortBy: SortablePhotoField = created
+        category: PhotoCategory
+    ): [Photo!]!
+}
+```
+
+### Фильтрация данных
+
+Можно отфильтровать результат запроса по необязательным аргументам:
+
+```
+type Query {
+    ...
+    allPhotos(category: PhotoCategory): [Photo!]!
+}
+```
+
+при этом получим возможность создать такой запрос на все фотографии с указанной категорией:
+
+```
+query {
+    allPhotos(category: "SELFIE") {
+        name
+        description
+        url
+    }
+}
+```
+
+### Пагинация
+
+Пагинация используется для разбиения большого количества данных на страницы, для этого тоже используются аргументы.
+
+Для реализации добавляем два необязательных аргумента first - определяет количество записей на странице, start - определяет начальную позицию или индекс первой записи для возврата.
+
+Пример создания типов для запросов:
+
+```
+type Query {
+    ...
+    allUsers(first: Int=50 start: Int=0): [User!]!
+    allPhotos(first: Int=25 start: Int=0): [Photo!]!
+}
+```
+
+```Int=50``` означает, что по-умолчанию будет предоставлено только 50 элементов, если в аргументе запроса не указано другое число. 
+
+
+Например, когда надо выбрать пользователей с номерами от 80 до 100:
+
+```
+query {
+    allUsers(first: 20 start: 80) {
+        name
+        avatar
+    }
+}
+```
+
+Можно вычислить общее количество страниц данных, разделив общее количество элементов на размер одной страницы:
+
+```
+//pageSize в нашем случае определяется аргументом first
+pages = pageSize/total
+```
+
+### Сортировка 
+
+Для реализации сортировки списков записей можно создать скалярный тип enum и перечислить, какие поля использовать для сортиривки:
+
+```
+// Порядки сортировки
+enum SortDirection {
+    ASCENDING
+    DESCENDING
+}
+
+// Перечисление полей для сортировки
+enum SortablePhotoField {
+    name
+    description
+    category
+    created
+}
+
+// Нисходящий порядок (от большего к меньшему) сортировки по дате создания
+Query {
+    allPhotos(
+        sort: SortDirection = DESCENDING
+        sortBy: SortablePhotoField = created
+    ): [Photo!]!
+}
+```
+
+
 ## Создание тестовой схемы:
 
 ```
 
 scalar DataTime
+scalar Location
 
-//
+// emum тоже скалярный тип
 
 enum PhotoCategory {
     SELFIE
@@ -115,11 +365,31 @@ enum PhotoCategory {
     GRAPHIC
 }
 
+enum SortDirection {
+    ASCENDING
+    DESCENDING
+}
+
+enum SortablePhotoField {
+    name
+    description
+    category
+    created
+}
+
+type Friendship {
+    friends: [User!]!
+    howLong: Int
+    whereWeMet: Location
+}
+
 type User {
     githubLogin: ID!
     name: String
     avatar: String
     postedPhotos: [Photo!]!
+    inPhotos: [Photo!]!
+    friends: [Friendship!]!
 }
 
 
@@ -131,10 +401,29 @@ type Photo {
     created: DateTime!
     category: PhotoCategory!
     postedBy: User!
+    taggedUsers: [User!]!
 }
 
+// first: Int=50 start: Int=0 - элементы пагинации, необязательные аргументы
+type Query {
+    ...
+    totalPhotos: Int!
+    allPhotos(
+        category: PhotoCategory 
+        first: Int=25 
+        start: Int=0
+        sort: SortDirection = DESCENDING
+        sortBy: SortablePhotoField = created
+    ): [Photo!]!
+    totalUsers: Int!
+    allUsers(first: Int=50 start: Int=0): [User!]!
+    User(githubLogin: ID!): User!
+    Photo(id: ID!): Photo!
+}
 
-
+schema {
+    query: Query
+}
 
 
 ```
