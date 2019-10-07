@@ -347,6 +347,99 @@ Query {
 }
 ```
 
+## Мутации
+
+Мутации - как глаголы, они должны что-то делать. Составляем список того, что может делать пользователь с сервисом.
+Созданный список всех действий, которые может делать пользователь - скорее всего, это и будут все ваши мутации.
+
+Пример: войти в систему, опубликовать, установить теги на фотографии. Все эти действия меняют состояние приложения.
+
+Для возможности публикации фотографии необходимо создать тип:
+
+```
+type Mutation {
+    postPhoto (
+        name: String!
+        description: String
+        category: PhotoCategory=PORTRAIT
+    ): Photo!
+}
+
+schema {
+    query: Query
+    mutqtion: Mutation
+}
+```
+
+После этого пользовательможет сделать следующее:
+
+```
+mutation {
+    postPhoto(name: "Sending the Palisandes") {
+        id
+        url
+        created
+        postedBy {
+            name
+        }
+    }
+}
+```
+
+Если использовать переменные, создание типа будет выглядеть так:
+
+```
+mutation postPhoto(
+    $name
+    $description
+    $category: PhotoCategory
+) {
+    postPhoto(
+        name: $name
+        description: $description
+        cetegory: $category
+    ) {
+        id 
+        name
+        email
+    }
+}
+```
+
+## Типы ввода
+
+Типы кввода нужны только для аргументов, улучшают читабельность
+
+Улучшаем мутацию:
+
+```
+input PostPhotoInput {
+    name: String!
+    description: String
+    category: PhotoCategory=PORTRAIT
+}
+
+type Mutation {
+    postPhoto (input: PostPhotoInput!): Photo!
+}
+
+schema {
+    query: Query
+    mutqtion: Mutation
+}
+```
+
+Улучшенная отправка мутации выглядит так:
+```
+mutation NewPhoto($input: PostPhotoInput!) {
+    postPhoto(input: $input) {
+        id 
+        url 
+        created
+    }
+}
+```
+
 
 ## Создание тестовой схемы:
 
@@ -421,8 +514,37 @@ type Query {
     Photo(id: ID!): Photo!
 }
 
+type Mutation {
+    postPhoto (
+        name: String!
+        description: String
+        category: PhotoCategory=PORTRAIT
+    ): Photo!
+}
+
 schema {
     query: Query
+    mutation: Mutation
+}
+
+// Запрос пользователя на мутацию photo с использованием переменных, они далеют мутацию многоразовой
+// ЗАПРОСЫ, НЕ СХЕМА
+
+
+mutation postPhoto(
+    $name: String!
+    $description: String
+    $category: PhotoCategory
+) {
+    postPhoto(
+        name: $name
+        description: $description
+        cetegory: $category
+    ) {
+        id 
+        name
+        email
+    }
 }
 
 
