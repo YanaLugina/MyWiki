@@ -408,7 +408,8 @@ mutation postPhoto(
 
 ## Типы ввода
 
-Типы кввода нужны только для аргументов, улучшают читабельность
+Типы ввода нужны только для аргументов, улучшают читабельность и их можно повторно испольщовать в определении разных типов.
+Помогают правильной организации и написанию четкой схемы GraphQL.
 
 Улучшаем мутацию:
 
@@ -439,11 +440,51 @@ mutation NewPhoto($input: PostPhotoInput!) {
     }
 }
 ```
+### Возвращаемые типы
 
+Возвращаемые типы - передают нам дополнительную информацию по результату запроса в дополнение к полезной нагрузке, например:
 
-## Создание тестовой схемы:
+- время выполнения запроса 
+- сколько результатов было получено
+
+### Тип подписки
+
+Подписки помогают получать новые или измененные данные в режиме реального времени. Для них мы тоже четко прописываем типы:
 
 ```
+// Определение типов подписки
+type Subscription {
+    newPhoto(category: PhotoCategory): Photo!
+    newUser: User!
+}
+
+// Добавление типов запросов на подписку в общую схему
+schema {
+    query: Query
+    mutation: Mutation
+    subscription: Subscription
+}
+
+// Запрос клиента на подписку
+subscription {
+    newPhoto(category: "ACTION") {
+        id
+        name
+        url
+        postedBy {
+            name
+        }
+    }
+}
+
+```
+
+## Схема приложения PhotoShare
+
+```
+"""
+Scalar types
+"""
 
 scalar DataTime
 scalar Location
@@ -470,6 +511,37 @@ enum SortablePhotoField {
     created
 }
 
+
+"""
+Input types
+"""
+
+inpit PhotoFilter {
+    category: PhotoCategory
+    createdBetween: DateRange
+    taggedUsers: [ID!]
+    searchText: String
+}
+
+input DateRange {
+    start: DateTime!
+    end: DateTime!
+}
+
+input DataPage {
+    first: Int = 25
+    start: Int = 0
+}
+
+input DataSort {
+    sort: SortDirection = DESCENDING
+    sortBy: SortablePhotoField = created
+}
+
+
+"""
+Users types
+"""
 type Friendship {
     friends: [User!]!
     howLong: Int
@@ -480,8 +552,18 @@ type User {
     githubLogin: ID!
     name: String
     avatar: String
-    postedPhotos: [Photo!]!
-    inPhotos: [Photo!]!
+    "---Published photos from User"
+    postedPhotos(
+        filter: PhotoFilter
+        paging: DataPage
+        sorting: DataSort
+    ): [Photo!]!
+    "---Tagged in the photos"
+    inPhotos(
+        filter: PhotoFilter 
+        paging: DataPage 
+        sorting: DataSort
+    ): [Photo!]!
     friends: [Friendship!]!
 }
 
@@ -494,58 +576,106 @@ type Photo {
     created: DateTime!
     category: PhotoCategory!
     postedBy: User!
-    taggedUsers: [User!]!
+    taggedUsers(sorting: DataSort): [User!]!
 }
 
-// first: Int=50 start: Int=0 - элементы пагинации, необязательные аргументы
+"""
+Определяем тип допустимого кода для отправки мутации githubAuth для авторизации на GitHub
+"""
+type AuthPayload {
+    user: User!
+    token: String!
+}
+
+
+"""
+Определение типов запросов на получение информации
+"""
 type Query {
     ...
     totalPhotos: Int!
     allPhotos(
-        category: PhotoCategory 
-        first: Int=25 
-        start: Int=0
-        sort: SortDirection = DESCENDING
-        sortBy: SortablePhotoField = created
-    ): [Photo!]!
+        filter: PhotoFilter
+        paging: DataPage
+        sorting: DataSort
+        ): [Photo!]!
     totalUsers: Int!
-    allUsers(first: Int=50 start: Int=0): [User!]!
+    allUsers(
+        paging: DataPage
+        sorting: DataSort
+        ): [User!]!
     User(githubLogin: ID!): User!
     Photo(id: ID!): Photo!
 }
 
+
+
+"""
+The input sent with the postPhoto Mutation
+"""
+input PostPhotoInput {
+    "The name of the new photo"
+    name: String!
+    
+    "(optional) A brief description of the photo"
+    description: String
+    
+    "(optional) The category that defines the photo"
+    category: PhotoCategory=PORTRAIT
+}
+
+
+"""
+Определение типов мутаций
+"""
 type Mutation {
-    postPhoto (
-        name: String!
-        description: String
-        category: PhotoCategory=PORTRAIT
-    ): Photo!
-}
-
-schema {
-    query: Query
-    mutation: Mutation
-}
-
-// Запрос пользователя на мутацию photo с использованием переменных, они далеют мутацию многоразовой
-// ЗАПРОСЫ, НЕ СХЕМА
-
-
-mutation postPhoto(
-    $name: String!
-    $description: String
-    $category: PhotoCategory
-) {
-    postPhoto(
-        name: $name
-        description: $description
-        cetegory: $category
-    ) {
-        id 
-        name
-        email
+    """
+    Autorizes a GitHub User
+    """
+    gitHubAuth(
+        "The unic code from GitHub that is sent to autorize the user"
+        code: String!
+    ): AuthPayload!
+    
+    """
+    Posted Photo
+    """
+    newPhoto($input: PostPhotoInput!) {
+        postPhoto (
+            "input: The name, description and category for a new photo"
+            input: $input
+        ): Photo!
     }
+    
 }
 
+"""
+Определение типов подписок
+"""
+type Subscription {
+    newPhoto(category: PhotoCategory): Photo!
+    newUser: User!
+}
+
+
+"""
+Общая схема основных типов
+"""
+schema {
+    """
+    Запросы на получение данных
+    """
+    query: Query
+    
+    """
+    Запросы на создание/изименение данных
+    """
+    mutation: Mutation
+    
+    """
+    Запросы на подписку на создания/изменения данных
+    """
+    subscription: Subscription
+}
 
 ```
