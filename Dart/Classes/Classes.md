@@ -23,11 +23,6 @@ void main () {
   
 }
 
-int calcWords (String inString) {
-  List <String> words = ['a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z'];
-  return 1;
-}
-
 class Car {
   
   String carName;
@@ -63,5 +58,32 @@ class CarSun extends Car {
     super.stop();
     print("The Sun $color $carName was started.");
   }
+}
+```
+
+###Еще подобное:
+
+```
+void main () {
+  
+  Car myCar = Car(name: "Tesla", way: 30.544);
+  myCar.infoCar();
+
+}
+
+class Car {
+ 
+  String carName;
+  double persentWay;
+  
+  Car({String name, double way}): carName = name, persentWay = way.roundToDouble() {
+    print("Work");
+    persentWay = 100;
+  }
+  
+  void infoCar() {
+    print("This car $carName: $persentWay");
+  }
+
 }
 ```

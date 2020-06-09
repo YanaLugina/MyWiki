@@ -22,7 +22,7 @@ Stream<int> printInteger(int aNum) async* {
 ```
 
 was returned:
-```javascript
+```
 Post 0
 Post 1
 Post 2
