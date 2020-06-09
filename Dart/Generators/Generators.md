@@ -1,7 +1,7 @@
 ## Generators
 
 ```
-main() {
+void main() {
   int aNumber = 13;
   Stream<int> res = printInteger(aNumber);
   res.listen((int val) {
