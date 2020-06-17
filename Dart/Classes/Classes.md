@@ -87,3 +87,74 @@ class Car {
 
 }
 ```
+
+### Переопределение методов родительского класса
+
+```
+void main () {
+  Car myCar = Car("red", 38, "Toyota");
+  myCar.carName = 'Ford';
+  myCar.color = "green";
+  myCar.start();
+  myCar.openDoor();
+
+  
+}
+
+
+class Vehicle {
+  String color;
+  
+  Vehicle(var color) {
+    this.color = color;
+    print("Color $color in Vehicle constructor");
+  }
+  
+  void start() {
+    print("Has start");
+  }
+}
+
+class Car extends Vehicle {
+  String carName = 'Lisa';
+  int speed;
+  
+  
+  Car(String color,int speed, String name): this.carName = name.toUpperCase(), this.speed = speed, super(color) {
+    // this.carName = $name;
+    print("Color $color in Car $carName constructor");
+  }
+  
+  String get color => super.color;
+  
+  void set color(String value) {
+    if (value == "black") {
+      throw ArgumentError("Please, never!");
+    }
+    
+    super.color = value;
+  }
+    
+  void openDoor() {
+    print("Open dors");
+  }
+  
+  @override
+  void start() {
+    print('Color car $carName: $color move with speed: $speed ml');
+    print('$carName');
+    super.start();
+  }
+
+}
+
+class Moto extends Vehicle {
+  String type;
+  
+  Moto(String $color): super($color);
+  
+  void roll() {
+    print("Rolled over in the air");
+  }
+}
+```
