@@ -90,3 +90,42 @@ class Car extends Vehicle {
 
 }
 ```
+
+###$ Example with getters
+
+```
+void main () {
+  
+  Cuboid myCuboid = Cuboid(1, 2, 3);
+  print(myCuboid.surfaceArea);
+  print(myCuboid.volume);
+  
+  Cube myCube = Cube(2);
+  print(myCube.surfaceArea);
+  print(myCube.volume);
+  
+}
+
+
+class Cuboid {
+  int length;
+  int width;
+  int height;
+  
+  Cuboid(this.length, this.width, this.height);
+  
+  int get surfaceArea {
+    return 2 * length * width + 2 * width * height + 2 * height * length;
+  }
+  
+  int get volume {
+    return width * length * height;
+  }
+}
+
+class Cube extends Cuboid {
+  int length;
+  
+  Cube(this.length): super(length, length, length); 
+}
+```
