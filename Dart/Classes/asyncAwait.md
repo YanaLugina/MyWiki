@@ -36,7 +36,7 @@ Future<String> downloadFile() {
 }
 
 Future<String> getTimeServer() {
-  Future<String> result = Future.microtask(() {
+  Future<String> result = Future(() {
     return HttpRequest.getString('https://rebounce.online/api/time');
   });
   
