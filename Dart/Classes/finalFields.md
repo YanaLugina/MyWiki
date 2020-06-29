@@ -1,7 +1,7 @@
 
 ```
 void main () {
-  Car myCar = Car(3, "Ford", 25);
+  Car myCar = Car(3, "Ford", 25.0);
   
   print(myCar.wheels);
   
