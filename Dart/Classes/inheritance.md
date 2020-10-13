@@ -54,7 +54,7 @@ class Moto extends Vehicle {
 void main () {
   
   Car myCar = Car("black", "Toyota");
-  myCar.carName = 'Ford';
+  myCar.name = 'Ford';
   myCar.color = 'green';
   myCar.start();
   myCar.openDoor();
@@ -64,12 +64,17 @@ void main () {
 
 
 class Vehicle {
-  String color;
+  String _color;
   
-  Vehicle(var color) {
-    this.color = color;
+  Vehicle(String color) : this._color = color {
     print("Color $color in Vehicle constructor");
   }
+  
+  void set color(String newColor) {
+    _color = newColor;
+  }
+  
+  String get color => this._color;
   
   void start() {
     print("Has start");
@@ -77,15 +82,22 @@ class Vehicle {
 }
 
 class Car extends Vehicle {
-  String carName = 'Lisa';
+  String _name = 'Lisa';
   
-  Car(String color, String name): this.carName = name.toUpperCase(), super(color) {
+  Car(String color, String nameNew): this._name = nameNew.toUpperCase(), super(color) {
     // this.carName = $name;
-    print("Color $color in Car $carName constructor");
+    print("Color $color in Car $name constructor");
   }
   
+  void set name(String data) {
+    this._name = data;
+  }
+  
+  String get name => this._name;
+  
+  
   void openDoor() {
-    print("Open dors");
+    print("Open dors, $color $name");
   }
 
 }
